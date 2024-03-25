@@ -46,7 +46,7 @@ You can also run the bot inside docker with hot reloading. It is still
 recommended to have have python and the bot's dependencies installed for
 compatibility with your linter.
 
-Still make sure to copy the `.env` file and that your discord bot application
+Make sure to copy the `.env` file and that your discord bot application
 has proper perms in the developer dashboard.
 
 ```sh

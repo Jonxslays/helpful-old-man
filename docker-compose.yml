@@ -11,7 +11,7 @@ services:
     volumes:
       - ./hom:/wise-old-man/hom-bot/hom
       - hom-bot-venv:/wise-old-man/hom-bot/.venv
-    command: nodemon -e py -w hom -x ".venv/bin/python3 -m hom"
+    command: nodemon -e py -w hom -x ".venv/bin/python3 -OOO -m hom"
 
 volumes:
   hom-bot-venv:

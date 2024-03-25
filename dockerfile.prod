@@ -9,5 +9,5 @@ COPY requirements.txt .
 RUN python3 -m venv .venv
 RUN .venv/bin/pip3 install -r requirements.txt
 
-# Run the bot
-CMD [".venv/bin/python3", "-m", "hom"]
+# Run the bot with optimization level 3
+CMD [".venv/bin/python3", "-OOO", "-m", "hom"]
