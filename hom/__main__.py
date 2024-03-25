@@ -11,5 +11,4 @@ if __name__ == "__main__":
         # Only works on unix-like systems
         uvloop.install()
 
-    hom = Hom()
-    hom.run()
+    Hom().run()
