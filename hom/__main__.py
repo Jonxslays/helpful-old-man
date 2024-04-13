@@ -1,6 +1,6 @@
 import os
 
-from hom.bot import Hom
+from hom.client import Client
 
 
 if __name__ == "__main__":
@@ -11,4 +11,4 @@ if __name__ == "__main__":
         # Only works on unix-like systems
         uvloop.install()
 
-    Hom().run()
+    Client.run()

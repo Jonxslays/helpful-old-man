@@ -1,10 +1,20 @@
 import arc
 import hikari
 
-from hom import Hom
+from hom import Client
 
 
-async def error_handler(event: arc.CommandErrorEvent[Hom]) -> None:
+async def error_handler(event: arc.CommandErrorEvent[Client]) -> None:
+    """A function used for handling errors.
+
+    Args:
+        event (`arc.CommandErrorEvent[Client]`): The command error event
+            that triggered the error.
+
+    Raises:
+        `Exception`: The error if it was an unexpected and it should
+            be logged.
+    """
     if isinstance(event.exception, (arc.UnderCooldownError, arc.MaxConcurrencyReachedError)):
         await event.context.respond(
             "Someone just used this command, wait a couple seconds.",
@@ -23,5 +33,5 @@ async def error_handler(event: arc.CommandErrorEvent[Hom]) -> None:
 
 
 @arc.loader
-def load(hom: Hom) -> None:
-    hom.subscribe(arc.CommandErrorEvent, error_handler)
+def load(client: Client) -> None:
+    client.subscribe(arc.CommandErrorEvent, error_handler)
