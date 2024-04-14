@@ -1,9 +1,12 @@
+import logging
+
 import arc
-import hikari
 
 from hom import Client
 from hom import Config
 from hom import Context
+
+logger = logging.getLogger(__name__)
 
 
 async def mods_only(ctx: Context[Client]) -> arc.HookResult:
@@ -21,11 +24,9 @@ async def mods_only(ctx: Context[Client]) -> arc.HookResult:
     if Config.MOD_ROLE in ctx.member.role_ids:
         return arc.HookResult()
 
-    await ctx.respond(
-        "You are not allowed to do that.",
-        flags=hikari.MessageFlag.EPHEMERAL,
-    )
-
+    user = f"{ctx.member.username} ({ctx.member.id})"
+    logger.debug(f"Permission denied for {user!r} executing command {ctx.command.name!r}")
+    await ctx.client.send_error_embed(ctx, "You are not allowed to do that.", True)
     return arc.HookResult(abort=True)
 
 

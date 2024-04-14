@@ -1,6 +1,6 @@
 import enum
 
-__all__ = ("BaseStrEnum", "SupportCategory", "SupportType")
+__all__ = ("BaseStrEnum", "SupportCategory", "SupportType", "TemplateSection")
 
 
 class BaseStrEnum(enum.StrEnum):
@@ -13,11 +13,11 @@ class BaseStrEnum(enum.StrEnum):
 class SupportCategory(BaseStrEnum):
     """The different support categories."""
 
-    Groups = "Groups → Assistance related to groups"
-    Names = "Name Changes → Assistance related to name changes"
-    Patreon = "Patreon → Request help with Patreon benefits"
-    ApiKey = "API Key → Request an API key for development"
-    Other = "Other → For all other inquiries"
+    Groups = "**Groups** → Assistance related to groups"
+    Names = "**Name Changes** → Assistance related to name changes"
+    Patreon = "**Patreon** → Request help with Patreon benefits"
+    ApiKey = "**API Key** → Request an API key for development"
+    Other = "**Other** → For all other inquiries"
 
 
 class SupportType(BaseStrEnum):
@@ -32,3 +32,11 @@ class SupportType(BaseStrEnum):
     DeleteNameChanges = "Delete my name change history"
 
     Other = "Other"
+
+
+class TemplateSection(BaseStrEnum):
+    """Different sections of the templates."""
+
+    Footer = "footer"
+    Categories = "categories"
+    QuestionsChannel = "questions_channel"

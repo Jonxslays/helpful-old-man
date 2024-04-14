@@ -1,4 +1,5 @@
-hikari==2.0.0.dev122
-hikari-arc==1.2.1
+hikari==2.0.0.dev124
+hikari-arc @ git+https://github.com/hypergonial/hikari-arc@4ae38a54081edb37540064c3257962764e8cb0bf
+hikari-miru==4.1.1
 python-dotenv==1.0.1
 uvloop==0.19.0; os_name != "nt"

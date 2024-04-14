@@ -20,7 +20,15 @@ class Configuration(type):
     """
 
     @classmethod
-    def _transform(cls, key: str) -> t.Any:
+    def _retrieve(cls, key: str) -> t.Any:
+        """Retrieves the key from the environment.
+
+        Args:
+            key: The name of the key to retrieve.
+
+        Returns:
+            The environment variable converted to the appropriate type.
+        """
         t, value = environ[f"HOM_{key}"].split(":", maxsplit=1)
 
         if t == "bool":
@@ -30,11 +38,11 @@ class Configuration(type):
 
     @classmethod
     def __getattr__(cls, key: str) -> t.Any:
-        return cls._transform(key)
+        return cls._retrieve(key)
 
     @classmethod
     def __getitem__(cls, key: str) -> t.Any:
-        return cls._transform(key)
+        return cls._retrieve(key)
 
 
 @t.final
@@ -67,25 +75,6 @@ class Config(metaclass=Configuration):
 
     def __init__(self) -> None:
         raise RuntimeError("Config should not be instantiated")
-
-    @classmethod
-    def reload(cls) -> bool:
-        global environ
-        logger.info("Reloading configuration...")
-        env = environ.copy()
-
-        try:
-            load_dotenv()
-
-            if not cls.validate():
-                raise Exception
-        except Exception as e:
-            logger.error(f"Failed to reload configuration: {e}")
-            environ = env
-            return False
-
-        logger.debug("Configuration successfully reloaded!")
-        return True
 
     @classmethod
     def validate(cls) -> bool:
