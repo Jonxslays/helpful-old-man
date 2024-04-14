@@ -7,7 +7,7 @@ from hom import Plugin
 
 # from hom import views
 
-plugin: Plugin[Client] = arc.GatewayPluginBase("events")
+plugin: Plugin = arc.GatewayPluginBase("events")
 
 
 # @plugin.include

@@ -1,6 +1,7 @@
 import enum
+from dataclasses import dataclass
 
-__all__ = ("BaseStrEnum", "SupportCategory", "SupportType", "TemplateSection")
+__all__ = ("BaseStrEnum", "SupportCategory", "SupportType", "Template", "TemplateSection")
 
 
 class BaseStrEnum(enum.StrEnum):
@@ -13,8 +14,8 @@ class BaseStrEnum(enum.StrEnum):
 class SupportCategory(BaseStrEnum):
     """The different support categories."""
 
-    Groups = "**Groups** → Assistance related to groups"
-    Names = "**Name Changes** → Assistance related to name changes"
+    Groups = "**Groups** → Request help related to a group"
+    Names = "**Name Changes** → Request help with a name change"
     Patreon = "**Patreon** → Request help with Patreon benefits"
     ApiKey = "**API Key** → Request an API key for development"
     Other = "**Other** → For all other inquiries"
@@ -37,6 +38,31 @@ class SupportType(BaseStrEnum):
 class TemplateSection(BaseStrEnum):
     """Different sections of the templates."""
 
-    Footer = "footer"
     Categories = "categories"
+    PatreonChannel = "patreon_channel"
+    Private = "private"
     QuestionsChannel = "questions_channel"
+    Reminder = "reminder"
+    ScreenshotFull = "screenshot_full"
+    ScreenshotMinimal = "screenshot_minimal"
+
+
+@dataclass
+class Template:
+    name: str
+    """The name of the template."""
+
+    content: str
+    """The template content."""
+
+    replaced: bool = False
+    """Whether or not the content placeholders have been replaced."""
+
+    def replace(self, replacement: str, section: TemplateSection) -> None:
+        """Replaces the content of the section with the replacement.
+
+        Args:
+            replacement: The text to replace with.
+            section: The section to replace.
+        """
+        self.content.replace(f"{{{{{section.value}}}}}", replacement)

@@ -1,6 +1,7 @@
 import logging
 import sys
-import typing as t
+
+# import typing as t
 from logging.handlers import RotatingFileHandler
 
 import arc
@@ -8,22 +9,29 @@ import hikari
 import miru
 
 from hom.config import Config
-from hom import models
+from hom import services
+from hom import views
 
-__all__ = ("Context", "Client", "ClientT", "Plugin")
+__all__ = ("Context", "Client", "Plugin")
 
-ClientT = t.TypeVar("ClientT", bound="Client")
-Context = arc.Context[ClientT]
-Plugin = arc.GatewayPluginBase[ClientT]
+# ClientT = t.TypeVar("ClientT", bound="Client")
+Context = arc.Context["Client"]
+Plugin = arc.GatewayPluginBase["Client"]
 
 
 class Client(arc.GatewayClient):
     """A helpful wrapper around the arc gateway client."""
 
-    __slots__ = ("_bot", "_support_messages", "_views", "create_message", "start_view")
+    __slots__ = (
+        "_bot",
+        "_views",
+        "_dependencies_injected",
+        "create_message",
+        "start_view",
+    )
 
     def __init__(self) -> None:
-        self._support_messages: dict[str, str] = {}
+        self._dependencies_injected = False
 
         # Instantiate the gateway bot
         self._bot = hikari.GatewayBot(
@@ -37,19 +45,8 @@ class Client(arc.GatewayClient):
         # Instantiate the miru client
         self._views = miru.Client(self._bot)
 
-        # Ensure all environment variables exist
-        if not Config.validate():
-            sys.exit(1)
-
-        # Configure logging
-        self._configure_logging()
-
-        # Load the client extensions
-        self.load_extensions_from("hom/extensions")
-
-        # Shortcut methods
-        self.create_message = self.rest.create_message
-        self.start_view = self.views.start_view
+        # Initialize remaining dependencies
+        self._initialize()
 
     @property
     def bot(self) -> hikari.GatewayBot:
@@ -63,11 +60,39 @@ class Client(arc.GatewayClient):
 
     @classmethod
     def run(cls) -> None:
-        """Runs the client. **NOTE**: This is a blocking function."""
+        """Runs the client. **NOTE**: This is a blocking method."""
         name = f"<#{Config.SUPPORT_CHANNEL}>"
         activity_type = hikari.ActivityType.WATCHING
         activity = hikari.Activity(name=name, type=activity_type)
         cls()._bot.run(status=hikari.Status.IDLE, activity=activity)
+
+    def _initialize(self) -> None:
+        """Initialize all required client attributes and configuration."""
+
+        # Ensure all environment variables exist
+        if not Config.validate():
+            sys.exit(1)
+
+        # Configure logging
+        self._configure_logging()
+
+        # Set up dependency injection
+        self._set_type_dependencies()
+
+        # Load the client extensions and set startup hook
+        self.load_extensions_from("hom/extensions")
+        self.set_startup_hook(Client._startup_handler)
+
+        # Shortcut methods
+        self.create_message = self.rest.create_message
+        self.start_view = self.views.start_view
+
+    def _set_type_dependencies(self) -> None:
+        templates = services.TemplateService()
+        embeds = services.EmbedService()
+
+        self.set_type_dependency(services.EmbedService, embeds)
+        self.set_type_dependency(services.TemplateService, templates)
 
     def _configure_logging(self) -> None:
         """Configures logging for the client."""
@@ -91,23 +116,6 @@ class Client(arc.GatewayClient):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    def add_support_template(self, name: str, content: str) -> None:
-        """Adds a support template to the client.
-
-        Args:
-            name: The name of the template.
-            content: The template content.
-        """
-        self._support_messages[name] = content
-
-    def get_support_template(self, message_type: models.BaseStrEnum | None = None) -> str:
-        """Gets the support template for the given message type.
-
-        Args:
-            message_type: The template type to get, or the main support template if `None`.
-
-        Returns:
-            The support template content.
-        """
-        name = message_type.name.lower() if message_type else "support"
-        return self._support_messages[name]
+    async def _startup_handler(self) -> None:
+        """Runs after the bot has started up and commands are synced."""
+        self.start_view(views.Support(), bind_to=None)

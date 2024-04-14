@@ -6,3 +6,5 @@ If you'd like to get an API key, please provide us with a unique name for your p
 - `my-clan-name-app` - good
 - `wom-bot` - bad (not unique)
 - `zulrah-botw` - bad (not unique)
+
+{{reminder}}

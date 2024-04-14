@@ -4,7 +4,7 @@ import arc
 from hom import Client
 from hom import Plugin
 
-plugin: Plugin[Client] = arc.GatewayPluginBase("other")
+plugin: Plugin = arc.GatewayPluginBase("other")
 
 
 # @plugin.include
