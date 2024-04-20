@@ -54,8 +54,9 @@ def install(*packages: str) -> InjectorT:
 
 
 @nox.session(reuse_venv=True)
-@install("pyright", "mypy", "discord.py", "python-dotenv", "uvloop")
+@install("pyright", "mypy", "hikari", "hikari-miru", "python-dotenv", "uvloop")
 def types(session: nox.Session) -> None:
+    session.install("hikari-arc")  # TODO: Remove and add arc to decorator in the next release.
     session.run("mypy")
     session.run("pyright")
 
