@@ -5,7 +5,6 @@ import hikari
 
 from hom.models import Template
 
-
 __all__ = ("EmbedService",)
 
 

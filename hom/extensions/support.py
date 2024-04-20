@@ -3,11 +3,11 @@ import logging
 import arc
 import hikari
 
-from hom import Context
 from hom import Client
+from hom import Context
+from hom import EmbedService
 from hom import Plugin
 from hom import TemplateSection
-from hom import EmbedService
 from hom import TemplateService
 from hom import views
 
@@ -20,13 +20,13 @@ logger = logging.getLogger(__name__)
 @arc.slash_subcommand("send", "Send the support embed to a channel.")
 async def support_send(
     ctx: Context,
-    channel: arc.Option[
+    /,
+    channel: arc.Option[  # type: ignore[valid-type]
         hikari.GuildTextChannel, arc.ChannelParams("The channel to send the embed to.")
     ],
     embeds: EmbedService = arc.inject(),
     templates: TemplateService = arc.inject(),
 ) -> None:
-    raise Exception("DFDKDKDKD")
     body = templates.get_support_template()
     footer = templates.get_template(TemplateSection.Reminder)
     embed = embeds.support(body, footer)

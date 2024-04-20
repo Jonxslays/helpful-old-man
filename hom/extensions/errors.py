@@ -4,6 +4,7 @@ import secrets
 
 import arc
 import hikari
+import miru
 
 from hom import Client
 from hom import EmbedService
@@ -11,7 +12,7 @@ from hom import EmbedService
 logger = logging.getLogger(__name__)
 
 
-async def error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Client]) -> None:
+async def _error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Client]) -> None:
     """A function used for handling errors.
 
     Args:
@@ -20,7 +21,7 @@ async def error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Clien
     Raises:
         The error if it was an unexpected and it should be logged.
     """
-    reference = secrets.token_hex(12)
+    reference: str | None = secrets.token_hex(12)
     ctx = event.context
     exc = event.exception
     ephemeral = False
@@ -49,7 +50,7 @@ async def error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Clien
         raise event.exception
 
 
-async def interaction_handler(
+async def _component_interaction_handler(
     embeds: EmbedService, interaction: hikari.ComponentInteraction
 ) -> None:
     await interaction.create_initial_response(
@@ -62,9 +63,10 @@ async def interaction_handler(
 @arc.loader
 def load(client: Client) -> None:
     embeds = client.get_type_dependency(EmbedService)
+    views = client.get_type_dependency(miru.Client)
 
-    inter_handler = functools.partial(interaction_handler, embeds)
-    err_handler = functools.partial(error_handler, embeds)
+    component_handler = functools.partial(_component_interaction_handler, embeds)
+    error_handler = functools.partial(_error_handler, embeds)
 
-    client.views.set_unhandled_component_interaction_hook(inter_handler)
-    client.subscribe(arc.CommandErrorEvent, err_handler)
+    views.set_unhandled_component_interaction_hook(component_handler)
+    client.subscribe(arc.CommandErrorEvent, error_handler)

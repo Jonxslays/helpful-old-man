@@ -1,20 +1,17 @@
 import logging
 import sys
-
-# import typing as t
-from logging.handlers import RotatingFileHandler
+from logging import handlers
 
 import arc
 import hikari
 import miru
 
-from hom.config import Config
 from hom import services
 from hom import views
+from hom.config import Config
 
 __all__ = ("Context", "Client", "Plugin")
 
-# ClientT = t.TypeVar("ClientT", bound="Client")
 Context = arc.Context["Client"]
 Plugin = arc.GatewayPluginBase["Client"]
 
@@ -22,41 +19,16 @@ Plugin = arc.GatewayPluginBase["Client"]
 class Client(arc.GatewayClient):
     """A helpful wrapper around the arc gateway client."""
 
-    __slots__ = (
-        "_bot",
-        "_views",
-        "_dependencies_injected",
-        "create_message",
-        "start_view",
-    )
+    __slots__ = ("create_message", "start_view")
 
     def __init__(self) -> None:
-        self._dependencies_injected = False
-
-        # Instantiate the gateway bot
-        self._bot = hikari.GatewayBot(
+        bot = hikari.GatewayBot(
             Config.DISCORD_TOKEN,
             intents=hikari.Intents.MESSAGE_CONTENT | hikari.Intents.GUILD_MESSAGES,
         )
 
-        # Instantiate the gateway client
-        super().__init__(self._bot, is_dm_enabled=False)
-
-        # Instantiate the miru client
-        self._views = miru.Client(self._bot)
-
-        # Initialize remaining dependencies
-        self._initialize()
-
-    @property
-    def bot(self) -> hikari.GatewayBot:
-        """The gateway bot instance this client is using."""
-        return self._bot
-
-    @property
-    def views(self) -> miru.Client:
-        """The miru client instance being used for component handling."""
-        return self._views
+        super().__init__(bot, is_dm_enabled=False)
+        self._initialize(bot, miru.Client(bot))
 
     @classmethod
     def run(cls) -> None:
@@ -64,9 +36,15 @@ class Client(arc.GatewayClient):
         name = f"<#{Config.SUPPORT_CHANNEL}>"
         activity_type = hikari.ActivityType.WATCHING
         activity = hikari.Activity(name=name, type=activity_type)
-        cls()._bot.run(status=hikari.Status.IDLE, activity=activity)
+        cls().get_type_dependency(hikari.GatewayBot).run(
+            status=hikari.Status.IDLE, activity=activity
+        )
 
-    def _initialize(self) -> None:
+    async def _startup_handler(self) -> None:
+        """Runs after the bot has started up and commands are synced."""
+        self.start_view(views.Support(), bind_to=None)
+
+    def _initialize(self, bot: hikari.GatewayBot, miru_client: miru.Client) -> None:
         """Initialize all required client attributes and configuration."""
 
         # Ensure all environment variables exist
@@ -77,7 +55,7 @@ class Client(arc.GatewayClient):
         self._configure_logging()
 
         # Set up dependency injection
-        self._set_type_dependencies()
+        self._set_type_dependencies(bot, miru_client)
 
         # Load the client extensions and set startup hook
         self.load_extensions_from("hom/extensions")
@@ -85,21 +63,30 @@ class Client(arc.GatewayClient):
 
         # Shortcut methods
         self.create_message = self.rest.create_message
-        self.start_view = self.views.start_view
+        self.start_view = miru_client.start_view
 
-    def _set_type_dependencies(self) -> None:
+    def _set_type_dependencies(self, bot: hikari.GatewayBot, miru_client: miru.Client) -> None:
+        """Sets the instances associated with the given types for use in
+        dependency injection.
+
+        Args:
+            bot: The gateway bot instance.
+            miru_client: The miru client instance.
+        """
         templates = services.TemplateService()
         embeds = services.EmbedService()
 
-        self.set_type_dependency(services.EmbedService, embeds)
         self.set_type_dependency(services.TemplateService, templates)
+        self.set_type_dependency(services.EmbedService, embeds)
+        self.set_type_dependency(miru.Client, miru_client)
+        self.set_type_dependency(hikari.GatewayBot, bot)
 
     def _configure_logging(self) -> None:
         """Configures logging for the client."""
         logger = logging.getLogger("root")
         logger.setLevel(logging.DEBUG if Config.DEBUG else logging.INFO)
 
-        handler = RotatingFileHandler(
+        handler = handlers.RotatingFileHandler(
             "./hom/logs/main.log",
             maxBytes=524288,  # 512KB
             encoding="utf-8",
@@ -115,7 +102,3 @@ class Client(arc.GatewayClient):
 
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-
-    async def _startup_handler(self) -> None:
-        """Runs after the bot has started up and commands are synced."""
-        self.start_view(views.Support(), bind_to=None)
