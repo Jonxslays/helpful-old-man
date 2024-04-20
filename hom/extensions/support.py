@@ -6,6 +6,7 @@ import hikari
 from hom import Client
 from hom import Context
 from hom import EmbedService
+from hom import Injector
 from hom import Plugin
 from hom import TemplateSection
 from hom import TemplateService
@@ -22,11 +23,13 @@ async def support_send(
     ctx: Context,
     /,
     channel: arc.Option[  # type: ignore[valid-type]
-        hikari.GuildTextChannel, arc.ChannelParams("The channel to send the embed to.")
+        hikari.GuildTextChannel,
+        arc.ChannelParams("The channel to send the embed to."),
     ],
-    embeds: EmbedService = arc.inject(),
-    templates: TemplateService = arc.inject(),
 ) -> None:
+    embeds = Injector.get(EmbedService)
+    templates = Injector.get(TemplateService)
+
     body = templates.get_support_template()
     footer = templates.get_template(TemplateSection.Reminder)
     embed = embeds.support(body, footer)

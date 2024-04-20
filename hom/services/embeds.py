@@ -7,8 +7,14 @@ from hom.models import Template
 
 __all__ = ("EmbedService",)
 
+INFO = 0x206694
+ERROR = 0xFF2B1C
+SUCCESS = 0x27E65A
+
 
 class EmbedService:
+    __slots__ = ()
+
     def create(
         self, title: str, message: str, color: hikari.Colorish, footer: str | None = None
     ) -> hikari.Embed:
@@ -20,17 +26,17 @@ class EmbedService:
         return embed
 
     def error(self, message: str) -> hikari.Embed:
-        return self.create("Error", message, 0xFF2B1C)
+        return self.create("Error", message, ERROR)
 
     def info(self, message: str) -> hikari.Embed:
-        return self.create("Info", message, 0x206694)
+        return self.create("Info", message, INFO)
 
     def success(self, message: str) -> hikari.Embed:
-        return self.create("Success", message, 0x27E65A)
+        return self.create("Success", message, SUCCESS)
 
     def support(self, body: Template, footer: Template) -> hikari.Embed:
         title = "Need help from one of our moderators?"
-        return self.create(title, body.content, 0x206694, footer.content)
+        return self.create(title, body.content, INFO, footer.content)
 
     async def send(
         self,
@@ -72,7 +78,7 @@ class EmbedService:
             ephemeral: Whether the message should be ephemeral. Defaults to False.
             reference: The optional reference string to place in the footer.
         """
-        await self.send(ctx, "Error", message, 0xFF2B1C, ephemeral, footer)
+        await self.send(ctx, "Error", message, ERROR, ephemeral, footer)
 
     async def send_info(
         self, ctx: arc.Context[t.Any], message: str, ephemeral: bool = False
@@ -84,4 +90,4 @@ class EmbedService:
             message: The message to send.
             ephemeral: Whether the message should be ephemeral. Defaults to False.
         """
-        await self.send(ctx, "Info", message, 0x0E6FED, ephemeral)
+        await self.send(ctx, "Info", message, INFO, ephemeral)

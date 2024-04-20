@@ -1,7 +1,16 @@
 import enum
 from dataclasses import dataclass
 
-__all__ = ("BaseStrEnum", "SupportCategory", "SupportType", "Template", "TemplateSection")
+import hikari
+
+__all__ = (
+    "BaseStrEnum",
+    "SupportCategory",
+    "SupportType",
+    "Template",
+    "TemplateSection",
+    "Ticket",
+)
 
 
 class BaseStrEnum(enum.StrEnum):
@@ -66,3 +75,9 @@ class Template:
             section: The section to replace.
         """
         self.content = self.content.replace(f"{{{{{section.value}}}}}", replacement)
+
+
+@dataclass(slots=True)
+class Ticket:
+    user: hikari.Snowflakeish
+    channel: hikari.Snowflakeish

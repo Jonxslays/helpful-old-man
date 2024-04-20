@@ -1,4 +1,3 @@
-import functools
 import logging
 import secrets
 
@@ -8,11 +7,12 @@ import miru
 
 from hom import Client
 from hom import EmbedService
+from hom import Injector
 
 logger = logging.getLogger(__name__)
 
 
-async def _error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Client]) -> None:
+async def error_handler(event: arc.CommandErrorEvent[Client]) -> None:
     """A function used for handling errors.
 
     Args:
@@ -21,6 +21,7 @@ async def _error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Clie
     Raises:
         The error if it was an unexpected and it should be logged.
     """
+    embeds = Injector.get(EmbedService)
     reference: str | None = secrets.token_hex(12)
     ctx = event.context
     exc = event.exception
@@ -50,9 +51,8 @@ async def _error_handler(embeds: EmbedService, event: arc.CommandErrorEvent[Clie
         raise event.exception
 
 
-async def _component_interaction_handler(
-    embeds: EmbedService, interaction: hikari.ComponentInteraction
-) -> None:
+async def component_interaction_handler(interaction: hikari.ComponentInteraction) -> None:
+    embeds = Injector.get(EmbedService)
     await interaction.create_initial_response(
         hikari.ResponseType.MESSAGE_CREATE,
         embeds.info("This button is no longer active."),
@@ -62,11 +62,6 @@ async def _component_interaction_handler(
 
 @arc.loader
 def load(client: Client) -> None:
-    embeds = client.get_type_dependency(EmbedService)
-    views = client.get_type_dependency(miru.Client)
-
-    component_handler = functools.partial(_component_interaction_handler, embeds)
-    error_handler = functools.partial(_error_handler, embeds)
-
-    views.set_unhandled_component_interaction_hook(component_handler)
+    views = Injector.get(miru.Client)
+    views.set_unhandled_component_interaction_hook(component_interaction_handler)
     client.subscribe(arc.CommandErrorEvent, error_handler)

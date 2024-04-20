@@ -1,4 +1,3 @@
-import functools
 import logging
 
 import arc
@@ -7,11 +6,12 @@ from hom import Client
 from hom import Config
 from hom import Context
 from hom import EmbedService
+from hom import Injector
 
 logger = logging.getLogger(__name__)
 
 
-async def mods_only(embeds: EmbedService, ctx: Context) -> arc.HookResult:
+async def mods_only(ctx: Context) -> arc.HookResult:
     """Limits command invocations to mods only.
 
     Args:
@@ -22,6 +22,7 @@ async def mods_only(embeds: EmbedService, ctx: Context) -> arc.HookResult:
             or failure.
     """
     assert ctx.member  # Safe because dm commands are disabled.
+    embeds = Injector.get(EmbedService)
 
     if Config.MOD_ROLE in ctx.member.role_ids:
         return arc.HookResult()
@@ -34,6 +35,4 @@ async def mods_only(embeds: EmbedService, ctx: Context) -> arc.HookResult:
 
 @arc.loader
 def load(client: Client) -> None:
-    embeds = client.get_type_dependency(EmbedService)
-    hook = functools.partial(mods_only, embeds)
-    client.add_hook(hook)
+    client.add_hook(mods_only)

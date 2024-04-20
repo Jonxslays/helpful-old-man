@@ -9,6 +9,7 @@ import miru
 from hom import services
 from hom import views
 from hom.config import Config
+from hom.injector import Injector
 
 __all__ = ("Context", "Client", "Plugin")
 
@@ -76,10 +77,11 @@ class Client(arc.GatewayClient):
         templates = services.TemplateService()
         embeds = services.EmbedService()
 
-        self.set_type_dependency(services.TemplateService, templates)
-        self.set_type_dependency(services.EmbedService, embeds)
-        self.set_type_dependency(miru.Client, miru_client)
-        self.set_type_dependency(hikari.GatewayBot, bot)
+        Injector.initialize(self.get_type_dependency, self.set_type_dependency)
+        Injector.set(services.TemplateService, templates)
+        Injector.set(services.EmbedService, embeds)
+        Injector.set(miru.Client, miru_client)
+        Injector.set(hikari.GatewayBot, bot)
 
     def _configure_logging(self) -> None:
         """Configures logging for the client."""
