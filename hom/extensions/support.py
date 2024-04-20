@@ -8,8 +8,6 @@ from hom import Context
 from hom import EmbedService
 from hom import Injector
 from hom import Plugin
-from hom import TemplateSection
-from hom import TemplateService
 from hom import views
 
 plugin: Plugin = arc.GatewayPluginBase("support")
@@ -28,11 +26,7 @@ async def support_send(
     ],
 ) -> None:
     embeds = Injector.get(EmbedService)
-    templates = Injector.get(TemplateService)
-
-    body = templates.get_support_template()
-    footer = templates.get_template(TemplateSection.Reminder)
-    embed = embeds.support(body, footer)
+    embed = embeds.support()
     flags = hikari.MessageFlag.EPHEMERAL
 
     message = await ctx.client.create_message(channel, embed, components=views.Support())

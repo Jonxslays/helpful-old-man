@@ -3,7 +3,9 @@ import typing as t
 import arc
 import hikari
 
-from hom.models import Template
+from hom.injector import Injector
+from hom.models import TemplateSection
+from .templates import TemplateService
 
 __all__ = ("EmbedService",)
 
@@ -34,8 +36,18 @@ class EmbedService:
     def success(self, message: str) -> hikari.Embed:
         return self.create("Success", message, SUCCESS)
 
-    def support(self, body: Template, footer: Template) -> hikari.Embed:
+    def support(self) -> hikari.Embed:
+        """Gets the support embed for use with the Support view.
+
+        Returns:
+            The embed with the template populated.
+        """
+        templates = Injector.get(TemplateService)
+
         title = "Need help from one of our moderators?"
+        body = templates.get_support_template()
+        footer = templates.get_template(TemplateSection.Reminder)
+
         return self.create(title, body.content, INFO, footer.content)
 
     async def send(

@@ -8,18 +8,17 @@ __all__ = ("TicketService",)
 
 
 class TicketService:
-    __slots__ = ("_embeds",)
-
-    def __init__(self) -> None:
-        self._embeds = Injector.get(EmbedService)
+    __slots__ = ()
 
     async def create(self, interaction: hikari.ComponentInteraction) -> None:
+        embeds = Injector.get(EmbedService)
+
         if ticket := await self.get_ticket(interaction.user):
             # Already has an open ticket
             message = f":envelope: Click [here](<#{ticket.channel}>) to view your open ticket."
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                self._embeds.info(message),
+                embeds.info(message),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 

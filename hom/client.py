@@ -74,14 +74,14 @@ class Client(arc.GatewayClient):
             bot: The gateway bot instance.
             miru_client: The miru client instance.
         """
-        templates = services.TemplateService()
         embeds = services.EmbedService()
+        templates = services.TemplateService()
 
         Injector.initialize(self.get_type_dependency, self.set_type_dependency)
-        Injector.set(services.TemplateService, templates)
-        Injector.set(services.EmbedService, embeds)
-        Injector.set(miru.Client, miru_client)
         Injector.set(hikari.GatewayBot, bot)
+        Injector.set(miru.Client, miru_client)
+        Injector.set(services.EmbedService, embeds)
+        Injector.set(services.TemplateService, templates)
 
     def _configure_logging(self) -> None:
         """Configures logging for the client."""
