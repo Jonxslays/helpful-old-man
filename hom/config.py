@@ -10,6 +10,18 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+class InvalidConfigType(Exception):
+    """Raised when an invalid type is used in the environment file."""
+
+
+class MissingConfig(Exception):
+    """Raised when the config value is not found in the environment."""
+
+
+class MissingConfigType(Exception):
+    """Raised when the config type is not part of the value."""
+
+
 class Configuration(type):
     """Metaclass for parsing config values from the environment.
 
@@ -29,12 +41,20 @@ class Configuration(type):
         Returns:
             The environment variable converted to the appropriate type.
         """
-        t, value = environ[f"HOM_{key}"].split(":", maxsplit=1)
+        try:
+            type_, value = environ[f"HOM_{key}"].split(":", maxsplit=1)
+        except KeyError:
+            raise MissingConfig()
+        except ValueError:
+            raise MissingConfigType()
 
-        if t == "bool":
+        if type_ == "bool":
             return bool(int(value))
 
-        return __builtins__[t](value)
+        try:
+            return __builtins__[type_](value)  # type: ignore[index]
+        except KeyError:
+            raise InvalidConfigType()
 
     @classmethod
     def __getattr__(cls, key: str) -> t.Any:
@@ -78,9 +98,10 @@ class Config(metaclass=Configuration):
 
     @classmethod
     def validate(cls) -> bool:
-        valid = True
+        valid: set[str] = set()
+        keys: list[str] = cls.__dict__["__annotations__"].keys()
 
-        for key in cls.__dict__["__annotations__"].keys():
+        for key in keys:
             if key == "DEBUG":
                 # Set debug if it doesnt exist
                 if not environ.get("HOM_DEBUG"):
@@ -89,11 +110,21 @@ class Config(metaclass=Configuration):
 
             try:
                 cls[key]
+                valid.add(key)
+            except MissingConfig:
+                cls._error(key, "is missing")
+            except InvalidConfigType:
+                cls._error(key, "has an invalid type prefix")
+            except MissingConfigType:
+                cls._error(key, "is missing the type prefix")
             except Exception:
-                valid = False
-                logger.error(f"Required environment variable {key} is missing")
+                cls._error(key, "has an invalid value")
 
-        return valid
+        return len(valid) == len(keys)
+
+    @classmethod
+    def _error(cls, key: str, error: str) -> None:
+        logger.error(f"Required environment variable HOM_{key} {error}")
 
 
 @t.final
