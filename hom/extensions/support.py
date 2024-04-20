@@ -30,10 +30,12 @@ async def support_send(
     body = templates.get_support_template()
     footer = templates.get_template(TemplateSection.Reminder)
     embed = embeds.support(body, footer)
+    flags = hikari.MessageFlag.EPHEMERAL
 
-    await ctx.client.create_message(channel, embed, components=views.Support())
-    await ctx.respond(embeds.success("Support embed has been sent."))
+    message = await ctx.client.create_message(channel, embed, components=views.Support())
+    jump_link = message.make_link(ctx.guild_id)
 
+    await ctx.respond(embeds.success(f"Success! {jump_link}."), flags=flags)
     logger.debug(f"Mod {ctx.author} ({ctx.author.id}) sent the support embed to #{channel}")
 
 

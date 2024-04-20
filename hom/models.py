@@ -65,4 +65,4 @@ class Template:
             replacement: The text to replace with.
             section: The section to replace.
         """
-        self.content.replace(f"{{{{{section.value}}}}}", replacement)
+        self.content = self.content.replace(f"{{{{{section.value}}}}}", replacement)
