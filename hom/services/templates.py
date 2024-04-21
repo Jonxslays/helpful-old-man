@@ -3,29 +3,12 @@ from pathlib import Path
 
 from hom.config import Config
 from hom.models import BaseStrEnum
-from hom.models import SupportCategory
-from hom.models import SupportType
 from hom.models import Template
 from hom.models import TemplateSection
 
 __all__ = ("TemplateService",)
 
 logger = logging.getLogger(__name__)
-
-GROUP_CATEGORIES = (
-    SupportCategory.Groups,
-    SupportType.VerifyGroup,
-    SupportType.ResetGroupVerification,
-    SupportType.RemoveFromGroup,
-    SupportType.Other,
-)
-
-NAME_CATEGORIES = (
-    SupportCategory.Names,
-    SupportType.ApproveNameChange,
-    SupportType.DeleteNameChanges,
-    SupportType.Other,
-)
 
 
 class TemplateService:
@@ -73,32 +56,8 @@ class TemplateService:
         """
         template = self.get_template()
 
-        if not template.replaced:
-            template.replace(self._get_categories_replacement(), TemplateSection.Categories)
-            template.replace(str(Config.QUESTIONS_CHANNEL), TemplateSection.QuestionsChannel)
-            template.replaced = True
+        if not template.populated:
+            template.populate(TemplateSection.QuestionsChannel, str(Config.QUESTIONS_CHANNEL))
+            template.populated = True
 
         return template
-
-    def _get_categories_replacement(self) -> str:
-        """Gets the support categories formatted for the support embed.
-
-        Returns:
-            The requested categories string.
-        """
-        sections: list[tuple[BaseStrEnum, ...]] = []
-        categories: tuple[SupportCategory | SupportType, ...]
-
-        for category in SupportCategory:
-            if category is SupportCategory.Groups:
-                categories = GROUP_CATEGORIES
-
-            elif category is SupportCategory.Names:
-                categories = NAME_CATEGORIES
-
-            else:
-                categories = (category,)
-
-            sections.append(categories)
-
-        return "\n\n".join("\n- ".join(s) for s in sections)
