@@ -1,5 +1,6 @@
 import logging
 import sys
+import typing as t
 from logging import handlers
 
 import arc
@@ -15,9 +16,10 @@ __all__ = ("Context", "Client", "Plugin")
 
 Context = arc.Context["Client"]
 Plugin = arc.GatewayPluginBase["Client"]
+T = t.TypeVar("T")
 
 
-class Client(arc.GatewayClient):
+class Client(arc.GatewayClientBase[hikari.GatewayBot]):
     """A helpful wrapper around the arc gateway client."""
 
     __slots__ = ("create_message", "start_view")
@@ -25,7 +27,7 @@ class Client(arc.GatewayClient):
     def __init__(self) -> None:
         bot = hikari.GatewayBot(
             Config.DISCORD_TOKEN,
-            intents=hikari.Intents.MESSAGE_CONTENT | hikari.Intents.GUILD_MESSAGES,
+            intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILDS,
         )
 
         super().__init__(bot, is_dm_enabled=False)
@@ -44,6 +46,7 @@ class Client(arc.GatewayClient):
     async def _startup_handler(self) -> None:
         """Runs after the bot has started up and commands are synced."""
         self.start_view(views.Support(), bind_to=None)
+        self.start_view(views.TicketBase(), bind_to=None)
 
     def _initialize(self, bot: hikari.GatewayBot, miru_client: miru.Client) -> None:
         """Initialize all required client attributes and configuration."""
@@ -76,12 +79,14 @@ class Client(arc.GatewayClient):
         """
         embeds = services.EmbedService()
         templates = services.TemplateService()
+        tickets = services.TicketService()
 
         Injector.initialize(self.get_type_dependency, self.set_type_dependency)
         Injector.set(hikari.GatewayBot, bot)
         Injector.set(miru.Client, miru_client)
         Injector.set(services.EmbedService, embeds)
         Injector.set(services.TemplateService, templates)
+        Injector.set(services.TicketService, tickets)
 
     def _configure_logging(self) -> None:
         """Configures logging for the client."""

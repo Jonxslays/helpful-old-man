@@ -1,6 +1,9 @@
 import hikari
 import miru
 
+from hom.injector import Injector
+from hom.services import TicketService
+
 __all__ = ("TicketBase",)
 
 
@@ -12,7 +15,9 @@ class TicketBase(miru.View):
         label="Close",
         emoji="\N{LOCK}",
         style=hikari.ButtonStyle.PRIMARY,
-        custom_id="support-ticket-close",
+        custom_id="ticket-close",
     )
     async def close_ticket(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        print(f"Ticket channel {ctx.get_channel()} would close now... if it could.")
+        tickets = Injector.get(TicketService)
+
+        await tickets.close(ctx)

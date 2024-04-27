@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 from hom.config import Config
-from hom.models import BaseStrEnum
 from hom.models import Template
 from hom.models import TemplateSection
 
@@ -21,7 +20,7 @@ class TemplateService:
             if path.is_dir():
                 continue
 
-            name = path.stem.replace("-", "").lower()
+            name = path.stem.lower()
             self.add_template(name, path.read_text().strip())
             logger.debug(f"Loaded {path.stem} template")
 
@@ -36,28 +35,62 @@ class TemplateService:
         """
         self._templates[name] = Template(name, content)
 
-    def get_template(self, message_type: BaseStrEnum | None = None) -> Template:
-        """Gets the template for the given message type.
+    def get_template(self, section: TemplateSection) -> Template:
+        """Gets the template for the given section.
 
         Args:
-            message_type: The template type to get, or the main support template if `None`.
+            section: The template section to get.
 
         Returns:
             The requested template.
         """
-        name = message_type.name.lower() if message_type else "support"
-        return self._templates[name]
+        return self._templates[section.name.lower()]
 
     def get_support_template(self) -> Template:
         """Gets the template for the support channel embed.
 
         Returns:
-            The requested template with placeholders replaced.
+            The requested template.
         """
-        template = self.get_template()
+        template = self.get_template(TemplateSection.Support)
 
         if not template.populated:
             template.populate(TemplateSection.QuestionsChannel, str(Config.QUESTIONS_CHANNEL))
+            template.populated = True
+
+        return template
+
+    def get_other_template(self) -> Template:
+        """Gets the template for the an "Other" ticket.
+
+        Returns:
+            The requested template.
+        """
+        return self._get_template_with_reminder_only(TemplateSection.Other)
+
+    def get_api_key_template(self) -> Template:
+        """Gets the template for the an "API Key" ticket.
+
+        Returns:
+            The requested template.
+        """
+        return self._get_template_with_reminder_only(TemplateSection.ApiKey)
+
+    def _get_template_with_reminder_only(self, section: TemplateSection) -> Template:
+        """Gets a template and only replaces the reminder section.
+
+        Args:
+            section: The template section to get.
+
+        Returns:
+            The requested template.
+        """
+        template = self.get_template(section)
+
+        if not template.populated:
+            reminder = self.get_template(TemplateSection.Reminder)
+            template.populate(TemplateSection.Reminder, reminder.content)
+            template.content += "\u200b\n\u200b"  # Padding above footer
             template.populated = True
 
         return template

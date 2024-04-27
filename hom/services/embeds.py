@@ -18,7 +18,11 @@ class EmbedService:
     __slots__ = ()
 
     def create(
-        self, title: str, message: str, color: hikari.Colorish, footer: str | None = None
+        self,
+        title: str,
+        message: str,
+        color: hikari.Colorish | None = None,
+        footer: str | None = None,
     ) -> hikari.Embed:
         embed = hikari.Embed(title=title, description=message, color=color)
 
@@ -37,7 +41,7 @@ class EmbedService:
         return self.create("Success", message, SUCCESS)
 
     def support(self) -> hikari.Embed:
-        """Gets the support embed for use with the Support view.
+        """Gets the embed for use with the Support view.
 
         Returns:
             The embed with the template populated.
@@ -47,6 +51,34 @@ class EmbedService:
         title = "Need help from one of our moderators?"
         body = templates.get_support_template()
         footer = templates.get_template(TemplateSection.Reminder)
+
+        return self.create(title, body.content, INFO, footer.content)
+
+    def other(self) -> hikari.Embed:
+        """Gets the embed for use with the Other view.
+
+        Returns:
+            The embed with the template populated.
+        """
+        templates = Injector.get(TemplateService)
+
+        title = "Other"
+        body = templates.get_other_template()
+        footer = templates.get_template(TemplateSection.Private)
+
+        return self.create(title, body.content, INFO, footer.content)
+
+    def api_key(self) -> hikari.Embed:
+        """Gets the embed for use with the ApiKey view.
+
+        Returns:
+            The embed with the template populated.
+        """
+        templates = Injector.get(TemplateService)
+
+        title = "API Key"
+        body = templates.get_api_key_template()
+        footer = templates.get_template(TemplateSection.Private)
 
         return self.create(title, body.content, INFO, footer.content)
 

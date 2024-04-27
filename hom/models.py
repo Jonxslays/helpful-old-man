@@ -16,15 +16,26 @@ class BaseStrEnum(enum.StrEnum):
 class TemplateSection(BaseStrEnum):
     """Different sections of the templates."""
 
-    PatreonChannel = "patreon_channel"
+    ApiKey = "api-key"
+    ApproveNameChange = "approve-name-change"
+    AwaitingResponse = "awaiting-response"
+    DeleteNameChanges = "delete-name-changes"
+    Other = "other"
+    Patreon = "patreon"
+    PatreonChannel = "patreon-channel"
     Private = "private"
-    QuestionsChannel = "questions_channel"
+    QuestionsChannel = "questions-channel"
     Reminder = "reminder"
-    ScreenshotFull = "screenshot_full"
-    ScreenshotMinimal = "screenshot_minimal"
+    RemoveFromGroup = "remove-from-group"
+    ResetGroupVerification = "reset-group-verification"
+    ReviewNameChange = "review-name-change"
+    ScreenshotFull = "screenshot-full"
+    ScreenshotMinimal = "screenshot-minimal"
+    Support = "support"
+    VerifyGroup = "verify-group"
 
 
-@dataclass
+@dataclass(slots=True)
 class Template:
     """A template used by HOM for message/embed content."""
 
@@ -49,5 +60,16 @@ class Template:
 
 @dataclass(slots=True)
 class Ticket:
+    """A support ticket for a user."""
+
     user: hikari.Snowflakeish
+    """The ID of the user who opened this ticket."""
+
     channel: hikari.Snowflakeish
+    """The ID of the channel for this ticket."""
+
+    description: str | None
+    """The description of this ticket."""
+
+    new: bool
+    """If true, this ticket was just created."""

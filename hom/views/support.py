@@ -1,6 +1,12 @@
 import hikari
 import miru
 
+from hom.injector import Injector
+from hom.services import TicketService
+from hom.services import EmbedService
+from . import ApiKey
+from . import Other
+
 __all__ = ("Support",)
 
 
@@ -24,11 +30,15 @@ class Support(miru.View):
         print("Clicks patreon")
 
     @miru.button(label="API Key", custom_id="support-api-key", style=hikari.ButtonStyle.SUCCESS)
-    async def api_key(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        # await ctx.message.edit(f"You pressed API KEY", components=self)
-        print("Clicks api key")
+    async def api_key(self, ctx: miru.ViewContext, button: miru.Button) -> None:
+        embeds = Injector.get(EmbedService)
+        tickets = Injector.get(TicketService)
+
+        await tickets.create(ctx, embeds.api_key(), ApiKey(), str(button.label))
 
     @miru.button(label="Other", custom_id="support-other", style=hikari.ButtonStyle.SUCCESS)
-    async def other(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        # await ctx.message.edit(f"You pressed OTHER", components=self)
-        print("Clicks other")
+    async def other(self, ctx: miru.ViewContext, button: miru.Button) -> None:
+        embeds = Injector.get(EmbedService)
+        tickets = Injector.get(TicketService)
+
+        await tickets.create(ctx, embeds.other(), Other(), str(button.label))
