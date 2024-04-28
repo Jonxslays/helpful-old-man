@@ -68,6 +68,18 @@ class EmbedService:
 
         return self.create(title, body.content, INFO, footer.content)
 
+    def ticket_closed(self, user_id: hikari.Snowflakeish) -> hikari.Embed:
+        """Gets the embed for use with the Archive view.
+
+        Args:
+            user_id: The ID of the user who closed the ticket.
+
+        Returns:
+            The embed with the template populated.
+        """
+        body = f"<@{user_id}> ({user_id}) has closed the ticket."
+        return self.create("Ticket closed", body, ERROR)
+
     def api_key(self) -> hikari.Embed:
         """Gets the embed for use with the ApiKey view.
 

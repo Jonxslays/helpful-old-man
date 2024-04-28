@@ -10,7 +10,7 @@ from hom import Injector
 from hom import Plugin
 from hom import views
 
-plugin: Plugin = arc.GatewayPluginBase("support")
+plugin: Plugin = arc.GatewayPluginBase("commands")
 support = plugin.include_slash_group("support", "Support related commands.")
 logger = logging.getLogger(__name__)
 

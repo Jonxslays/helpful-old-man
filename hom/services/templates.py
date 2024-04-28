@@ -44,7 +44,7 @@ class TemplateService:
         Returns:
             The requested template.
         """
-        return self._templates[section.name.lower()]
+        return self._templates[section.value.lower()]
 
     def get_support_template(self) -> Template:
         """Gets the template for the support channel embed.

@@ -4,8 +4,7 @@ import miru
 from hom.injector import Injector
 from hom.services import TicketService
 from hom.services import EmbedService
-from . import ApiKey
-from . import Other
+from . import Closable
 
 __all__ = ("Support",)
 
@@ -34,11 +33,11 @@ class Support(miru.View):
         embeds = Injector.get(EmbedService)
         tickets = Injector.get(TicketService)
 
-        await tickets.create(ctx, embeds.api_key(), ApiKey(), str(button.label))
+        await tickets.create(ctx, embeds.api_key(), Closable(), str(button.label))
 
     @miru.button(label="Other", custom_id="support-other", style=hikari.ButtonStyle.SUCCESS)
     async def other(self, ctx: miru.ViewContext, button: miru.Button) -> None:
         embeds = Injector.get(EmbedService)
         tickets = Injector.get(TicketService)
 
-        await tickets.create(ctx, embeds.other(), Other(), str(button.label))
+        await tickets.create(ctx, embeds.other(), Closable(), str(button.label))

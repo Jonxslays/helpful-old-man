@@ -45,8 +45,9 @@ class Client(arc.GatewayClientBase[hikari.GatewayBot]):
 
     async def _startup_handler(self) -> None:
         """Runs after the bot has started up and commands are synced."""
+        self.start_view(views.Archive(), bind_to=None)
+        self.start_view(views.Closable(), bind_to=None)
         self.start_view(views.Support(), bind_to=None)
-        self.start_view(views.TicketBase(), bind_to=None)
 
     def _initialize(self, bot: hikari.GatewayBot, miru_client: miru.Client) -> None:
         """Initialize all required client attributes and configuration."""
@@ -77,16 +78,15 @@ class Client(arc.GatewayClientBase[hikari.GatewayBot]):
             bot: The gateway bot instance.
             miru_client: The miru client instance.
         """
-        embeds = services.EmbedService()
-        templates = services.TemplateService()
-        tickets = services.TicketService()
-
-        Injector.initialize(self.get_type_dependency, self.set_type_dependency)
-        Injector.set(hikari.GatewayBot, bot)
-        Injector.set(miru.Client, miru_client)
-        Injector.set(services.EmbedService, embeds)
-        Injector.set(services.TemplateService, templates)
-        Injector.set(services.TicketService, tickets)
+        (
+            Injector.initialize(self.get_type_dependency, self.set_type_dependency)
+            .set(hikari.GatewayBot, bot)
+            .set(miru.Client, miru_client)
+            .set(services.EmbedService, services.EmbedService())
+            .set(services.ModLogService, services.ModLogService())
+            .set(services.TemplateService, services.TemplateService())
+            .set(services.TicketService, services.TicketService())
+        )
 
     def _configure_logging(self) -> None:
         """Configures logging for the client."""
