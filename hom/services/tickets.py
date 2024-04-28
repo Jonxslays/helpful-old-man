@@ -37,7 +37,7 @@ class TicketService:
         client = Injector.get(_client.Client)
         assert ctx.guild_id
 
-        if ticket := self._get_ticket_for_user(ctx.guild_id, ctx.author.id):
+        if ticket := await self._get_ticket_for_user(ctx.guild_id, ctx.author.id):
             # Already has an open ticket
             message = f":envelope: View your existing ticket: <#{ticket.channel}>"
             await ctx.respond(message, flags=hikari.MessageFlag.EPHEMERAL)
@@ -84,13 +84,21 @@ class TicketService:
         embeds = Injector.get(EmbedService)
         assert ctx.guild_id
 
-        if not (ticket := self._get_ticket_for_channel(ctx.guild_id, ctx.channel_id)):
+        if not (ticket := await self._get_ticket_for_channel(ctx.guild_id, ctx.channel_id)):
             # The channel topic doesnt have the correct format
             # Expecting: <ticket type>-<user id>
             # Example:   Other-123456789
             embed = embeds.error("Can't determine the original ticket owner.")
             await ctx.respond(embed)
             return None
+
+        if ticket.is_closed():
+            await ctx.respond(
+                embeds.error("Ticket is already closed."),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
+            return None  # No need to close if its already closed
 
         # Remove the users permissions to the channel
         await self._remove_user_from_ticket(ticket)
@@ -101,7 +109,7 @@ class TicketService:
     async def archive(self, ctx: miru.ViewContext) -> None:
         print("Archiving tickets is not yet implemented.")
 
-    def _get_ticket_for_user(
+    async def _get_ticket_for_user(
         self, guild_id: hikari.Snowflakeish, user_id: hikari.Snowflake
     ) -> Ticket | None:
         """Gets the ticket for the user, if one exists.
@@ -113,7 +121,7 @@ class TicketService:
         Returns:
             The ticket or none if one was not found.
         """
-        for channel in self._get_ticket_channels(guild_id):
+        async for channel in self._get_ticket_channels(guild_id):
             # If they have user specific permissions on the channel
             if overwrites := channel.permission_overwrites.get(user_id):
                 # And those permissions allow them to view it
@@ -123,7 +131,7 @@ class TicketService:
 
         return None
 
-    def _get_ticket_for_channel(
+    async def _get_ticket_for_channel(
         self, guild_id: hikari.Snowflakeish, channel_id: hikari.Snowflakeish
     ) -> Ticket | None:
         """Gets the ticket for the channel, if one exists.
@@ -142,41 +150,63 @@ class TicketService:
             # I felt like we were more likely to delete that message on
             # accident than to edit the channel topic on accident.
 
-            for channel in self._get_ticket_channels(guild_id):
+            async for channel in self._get_ticket_channels(guild_id):
                 if channel.id == channel_id:
                     if not channel.topic:
                         raise Exception("Ticket channel topic is missing")
 
                     # Expecting: <ticket type>-<user id>
                     # Example:   Other-123456789
-                    owner_id = channel.topic.split("-")[-1]
+                    owner_id = channel.topic.split("-")[-1].rstrip("_CLOSED")
                     return Ticket(int(owner_id), channel.id, channel.topic, False)
         except Exception as e:
             logger.error(f"Failed to find ticket owner for channel {channel_id}: {e}")
 
         return None
 
-    def _get_ticket_channels(
+    async def _get_ticket_channels(
         self, guild_id: hikari.Snowflakeish
-    ) -> t.Iterable[hikari.GuildTextChannel]:
+    ) -> t.AsyncIterable[hikari.GuildTextChannel]:
         """Gets the currently active ticket channels.
 
         Args:
             guild_id: The guild to get channels for.
 
         Returns:
-            An iterable over the active ticket channels.
+            An async iterable over the active ticket channels.
         """
         client = Injector.get(_client.Client)
         channels = client.cache.get_guild_channels_view_for_guild(guild_id)
+        filtered = self._filter_valid_channels(channels.values())
 
+        # TODO: This caching mechanism is broken
+        # but we dont want to always fetch
+        # the ratelimit is 10 / minute.
+        # someone could spam a support button and ratelimit us
+
+        if not any(filtered):
+            logger.info("Fetching ticket channels from the API")
+            channels = await client.rest.fetch_guild_channels(guild_id)
+            filtered = self._filter_valid_channels(channels)
+
+        for channel in filtered:
+            # We are manually caching here to prevent having to fetch
+            # a bunch of times in a row
+            if not client.app._cache.get_guild_channel(channel):  # type: ignore
+                client.app._cache.set_guild_channel(channel)  # type: ignore
+
+            yield channel
+
+    def _filter_valid_channels(
+        self, channels: t.Iterable[hikari.GuildChannel]
+    ) -> t.Iterable[hikari.GuildTextChannel]:
         for channel in channels:
-            if not isinstance(channel, hikari.GuildTextChannel):
-                # Not a text channel
-                continue
-
             if channel.parent_id != Config.TICKET_CATEGORY:
                 # Not in the correct category
+                continue
+
+            if not isinstance(channel, hikari.GuildTextChannel):
+                # Not a text channel
                 continue
 
             yield channel
@@ -193,6 +223,7 @@ class TicketService:
         await client.rest.edit_channel(
             ticket.channel,
             reason=f"Ticket closed for user: {ticket.description}",
+            topic=f"{ticket.description}_CLOSED",
             permission_overwrites=(perms,),
         )
 

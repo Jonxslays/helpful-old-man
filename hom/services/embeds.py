@@ -41,7 +41,7 @@ class EmbedService:
         return self.create("Success", message, SUCCESS)
 
     def support(self) -> hikari.Embed:
-        """Gets the embed for use with the Support view.
+        """Gets the embed for use in the support channel.
 
         Returns:
             The embed with the template populated.
@@ -55,7 +55,7 @@ class EmbedService:
         return self.create(title, body.content, INFO, footer.content)
 
     def other(self) -> hikari.Embed:
-        """Gets the embed for use with the Other view.
+        """Gets the embed for use with the "Other" ticket.
 
         Returns:
             The embed with the template populated.
@@ -69,19 +69,19 @@ class EmbedService:
         return self.create(title, body.content, INFO, footer.content)
 
     def ticket_closed(self, user_id: hikari.Snowflakeish) -> hikari.Embed:
-        """Gets the embed for use with the Archive view.
+        """Gets the embed for use when a ticket is closed.
 
         Args:
             user_id: The ID of the user who closed the ticket.
 
         Returns:
-            The embed with the template populated.
+            The requested embed.
         """
         body = f"<@{user_id}> ({user_id}) has closed the ticket."
         return self.create("Ticket closed", body, ERROR)
 
     def api_key(self) -> hikari.Embed:
-        """Gets the embed for use with the ApiKey view.
+        """Gets the embed for use with the "ApiKey" ticket.
 
         Returns:
             The embed with the template populated.
@@ -90,6 +90,20 @@ class EmbedService:
 
         title = "API Key"
         body = templates.get_api_key_template()
+        footer = templates.get_template(TemplateSection.Private)
+
+        return self.create(title, body.content, INFO, footer.content)
+
+    def patreon(self) -> hikari.Embed:
+        """Gets the embed for use with the "Patreon" ticket.
+
+        Returns:
+            The embed with the template populated.
+        """
+        templates = Injector.get(TemplateService)
+
+        title = "Patreon"
+        body = templates.get_patreon_template()
         footer = templates.get_template(TemplateSection.Private)
 
         return self.create(title, body.content, INFO, footer.content)

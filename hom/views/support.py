@@ -24,20 +24,22 @@ class Support(miru.View):
         print("Clicks names")
 
     @miru.button(label="Patreon", custom_id="support-patreon", style=hikari.ButtonStyle.SUCCESS)
-    async def patreon(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        # await ctx.message.edit(f"You pressed PATREON", components=self)
-        print("Clicks patreon")
+    async def patreon(self, ctx: miru.ViewContext, button: miru.Button) -> None:
+        embeds = Injector.get(EmbedService)
+        await self.closable_ticket(ctx, embeds.patreon(), button)
 
     @miru.button(label="API Key", custom_id="support-api-key", style=hikari.ButtonStyle.SUCCESS)
     async def api_key(self, ctx: miru.ViewContext, button: miru.Button) -> None:
         embeds = Injector.get(EmbedService)
-        tickets = Injector.get(TicketService)
-
-        await tickets.create(ctx, embeds.api_key(), Closable(), str(button.label))
+        await self.closable_ticket(ctx, embeds.api_key(), button)
 
     @miru.button(label="Other", custom_id="support-other", style=hikari.ButtonStyle.SUCCESS)
     async def other(self, ctx: miru.ViewContext, button: miru.Button) -> None:
         embeds = Injector.get(EmbedService)
-        tickets = Injector.get(TicketService)
+        await self.closable_ticket(ctx, embeds.other(), button)
 
-        await tickets.create(ctx, embeds.other(), Closable(), str(button.label))
+    async def closable_ticket(
+        self, ctx: miru.ViewContext, embed: hikari.Embed, button: miru.Button
+    ) -> None:
+        tickets = Injector.get(TicketService)
+        await tickets.create(ctx, embed, Closable(), str(button.label))

@@ -61,26 +61,43 @@ class TemplateService:
         return template
 
     def get_other_template(self) -> Template:
-        """Gets the template for the an "Other" ticket.
+        """Gets the template for the "Other" ticket.
 
         Returns:
             The requested template.
         """
-        return self._get_template_with_reminder_only(TemplateSection.Other)
+        return self._get_template_with_reminder(TemplateSection.Other)
 
     def get_api_key_template(self) -> Template:
-        """Gets the template for the an "API Key" ticket.
+        """Gets the template for the "API Key" ticket.
 
         Returns:
             The requested template.
         """
-        return self._get_template_with_reminder_only(TemplateSection.ApiKey)
+        return self._get_template_with_reminder(TemplateSection.ApiKey)
 
-    def _get_template_with_reminder_only(self, section: TemplateSection) -> Template:
-        """Gets a template and only replaces the reminder section.
+    def get_patreon_template(self) -> Template:
+        """Gets the template for the "Patreon" ticket.
+
+        Returns:
+            The requested template.
+        """
+        template = self._get_template_with_reminder(TemplateSection.Patreon, False)
+
+        if not template.populated:
+            template.populate(TemplateSection.PatreonChannel, str(Config.PATREON_CHANNEL))
+            template.populated = True
+
+        return template
+
+    def _get_template_with_reminder(
+        self, section: TemplateSection, mark_populated: bool = True
+    ) -> Template:
+        """Gets a template and only populates the reminder section.
 
         Args:
             section: The template section to get.
+            mark_populated: Whether or not to mark the template as populated.
 
         Returns:
             The requested template.
@@ -91,6 +108,8 @@ class TemplateService:
             reminder = self.get_template(TemplateSection.Reminder)
             template.populate(TemplateSection.Reminder, reminder.content)
             template.content += "\u200b\n\u200b"  # Padding above footer
-            template.populated = True
+
+            if mark_populated:
+                template.populated = True
 
         return template
