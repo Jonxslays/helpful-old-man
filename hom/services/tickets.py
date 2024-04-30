@@ -88,17 +88,10 @@ class TicketService:
             # The channel topic doesnt have the correct format
             # Expecting: <ticket type>-<user id>
             # Example:   Other-123456789
-            embed = embeds.error("Can't determine the original ticket owner.")
-            await ctx.respond(embed)
-            return None
+            return await embeds.send_error(ctx, "Can't determine the original ticket owner.")
 
         if ticket.is_closed():
-            await ctx.respond(
-                embeds.error("Ticket is already closed."),
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-
-            return None  # No need to close if its already closed
+            return await embeds.send_error(ctx, "Ticket is already closed.", ephemeral=True)
 
         # Remove the users permissions to the channel
         await self._remove_user_from_ticket(ticket)

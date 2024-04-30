@@ -2,6 +2,7 @@ import typing as t
 
 import arc
 import hikari
+import miru
 
 from hom.injector import Injector
 from hom.models import TemplateSection
@@ -110,7 +111,7 @@ class EmbedService:
 
     async def send(
         self,
-        ctx: arc.Context[t.Any],
+        ctx: arc.Context[t.Any] | miru.ViewContext,
         title: str,
         message: str,
         color: hikari.Colorish,
@@ -134,7 +135,7 @@ class EmbedService:
 
     async def send_error(
         self,
-        ctx: arc.Context[t.Any],
+        ctx: arc.Context[t.Any] | miru.ViewContext,
         message: str,
         *,
         ephemeral: bool = False,
@@ -151,7 +152,7 @@ class EmbedService:
         await self.send(ctx, "Error", message, ERROR, ephemeral, footer)
 
     async def send_info(
-        self, ctx: arc.Context[t.Any], message: str, ephemeral: bool = False
+        self, ctx: arc.Context[t.Any] | miru.ViewContext, message: str, ephemeral: bool = False
     ) -> None:
         """Sends an info embed to the contexts channel.
 
