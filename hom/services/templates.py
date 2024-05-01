@@ -90,6 +90,82 @@ class TemplateService:
 
         return template
 
+    def get_verify_group_template(self) -> Template:
+        """Gets the template for the "Verify Group" ticket.
+
+        Returns:
+            The requested template.
+        """
+        template = self._get_template_with_reminder(TemplateSection.VerifyGroup, False)
+
+        if not template.populated:
+            screenshot = self.get_template(TemplateSection.ScreenshotFull)
+            template.populate(TemplateSection.ScreenshotFull, screenshot.content)
+            template.populated = True
+
+        return template
+
+    def get_reset_group_verification_template(self) -> Template:
+        """Gets the template for the "Reset group verification" ticket.
+
+        Returns:
+            The requested template.
+        """
+        template = self._get_template_with_reminder(TemplateSection.ResetGroupVerification, False)
+
+        if not template.populated:
+            screenshot = self.get_template(TemplateSection.ScreenshotFull)
+            template.populate(TemplateSection.ScreenshotFull, screenshot.content)
+            template.populated = True
+
+        return template
+
+    def get_remove_from_group_template(self) -> Template:
+        """Gets the template for the "Reset from group" ticket.
+
+        Returns:
+            The requested template.
+        """
+        template = self._get_template_with_reminder(TemplateSection.RemoveFromGroup, False)
+
+        if not template.populated:
+            screenshot = self.get_template(TemplateSection.ScreenshotMinimal)
+            template.populate(TemplateSection.ScreenshotMinimal, screenshot.content)
+            template.populated = True
+
+        return template
+
+    def get_approve_name_change_template(self) -> Template:
+        """Gets the template for the "Approve name change" ticket.
+
+        Returns:
+            The requested template.
+        """
+        return self._get_template_with_reminder(TemplateSection.ApproveNameChange)
+
+    def get_delete_name_changes_template(self) -> Template:
+        """Gets the template for the "Delete name changes" ticket.
+
+        Returns:
+            The requested template.
+        """
+        template = self._get_template_with_reminder(TemplateSection.DeleteNameChanges, False)
+
+        if not template.populated:
+            screenshot = self.get_template(TemplateSection.ScreenshotMinimal)
+            template.populate(TemplateSection.ScreenshotMinimal, screenshot.content)
+            template.populated = True
+
+        return template
+
+    def get_review_name_change_template(self) -> Template:
+        """Gets the template for the "Review name change" ticket.
+
+        Returns:
+            The requested template.
+        """
+        return self._get_template_with_reminder(TemplateSection.ReviewNameChange)
+
     def _get_template_with_reminder(
         self, section: TemplateSection, mark_populated: bool = True
     ) -> Template:

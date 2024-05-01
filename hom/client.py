@@ -46,8 +46,10 @@ class Client(arc.GatewayClientBase[hikari.GatewayBot]):
     async def _startup_handler(self) -> None:
         """Runs after the bot has started up and commands are synced."""
         self.start_view(views.Archive(), bind_to=None)
-        self.start_view(views.Closable(), bind_to=None)
+        self.start_view(views.Names(), bind_to=None)
+        self.start_view(views.Groups(), bind_to=None)
         self.start_view(views.Support(), bind_to=None)
+        self.start_view(views.Ticket(), bind_to=None)
 
     def _initialize(self, bot: hikari.GatewayBot, miru_client: miru.Client) -> None:
         """Initialize all required client attributes and configuration."""

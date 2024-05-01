@@ -75,4 +75,5 @@ class Ticket:
     """If true, this ticket was just created."""
 
     def is_closed(self) -> bool:
+        """Whether or not this ticket is closed."""
         return (self.description or "").endswith("CLOSED")

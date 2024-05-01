@@ -20,7 +20,7 @@ class TicketService:
     __slots__ = ()
 
     async def create(
-        self, ctx: miru.ViewContext, embed: hikari.Embed, view: miru.View, topic: str
+        self, ctx: miru.ViewContext, embed: hikari.Embed, view: miru.View, label: str
     ) -> Ticket:
         """Creates a support ticket for the interaction user or returns
         the existing ticket if one already exists.
@@ -29,7 +29,7 @@ class TicketService:
             ctx: The miru view context.
             embed: The embed to send to the created ticket channel.
             view: The view to send to the created ticket channel.
-            topic: The type of ticket (will be added to the channel topic).
+            label: The button label (will be added to the channel topic).
 
         Returns:
             The new or existing ticket.
@@ -44,12 +44,13 @@ class TicketService:
             return ticket
 
         # Create the ticket channel
+        topic = f"{label}-{ctx.author.id}"
         channel = await client.rest.create_guild_text_channel(
             ctx.guild_id,
-            f"{ctx.author.username[:15]}",
-            topic=f"{topic}-{ctx.author.id}",
+            f"{ctx.author.username[:20]}",
+            topic=topic,
             category=Config.TICKET_CATEGORY,
-            reason=f"{ctx.author.username} ({ctx.author.id}) has opened a ticket: {topic}.",
+            reason=f"{ctx.author.username} ({ctx.author.id}) has opened a ticket: {label}.",
             permission_overwrites=self._create_ticket_overwrites(
                 client.application, ctx.author.id, ctx.guild_id
             ),

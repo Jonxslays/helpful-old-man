@@ -3,14 +3,18 @@ import miru
 
 from hom.injector import Injector
 from hom.services import TicketService
-from . import Archive
+from hom.views import ViewBase
+from .archive import Archive
 
-__all__ = ("Closable",)
+__all__ = ("Ticket",)
 
 
-class Closable(miru.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
+class Ticket(ViewBase):
+    """Consists of a single button "Close" for closing a ticket.
+
+    Clicking the button will remove permissions from the original owner
+    and update the ticket channel topic to be suffixed with _CLOSED.
+    """
 
     @miru.button(
         label="Close",
@@ -20,5 +24,4 @@ class Closable(miru.View):
     )
     async def close_ticket(self, ctx: miru.ViewContext, _: miru.Button) -> None:
         tickets = Injector.get(TicketService)
-
         await tickets.close(ctx, Archive())

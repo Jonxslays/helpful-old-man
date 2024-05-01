@@ -3,21 +3,19 @@ import miru
 
 from hom.injector import Injector
 from hom.services import TicketService
+from hom.views.base import ViewBase
 
 __all__ = ("Archive",)
 
 
-class Archive(miru.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-
+class Archive(ViewBase):
     @miru.button(
         label="Archive Ticket",
         emoji="\N{CROSS MARK}",
         style=hikari.ButtonStyle.PRIMARY,
         custom_id="ticket-archive",
     )
-    async def close_ticket(self, ctx: miru.ViewContext, _: miru.Button) -> None:
+    async def archive_ticket(self, ctx: miru.ViewContext, _: miru.Button) -> None:
         tickets = Injector.get(TicketService)
 
         await tickets.archive(ctx)

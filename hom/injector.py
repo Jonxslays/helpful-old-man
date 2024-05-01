@@ -9,6 +9,9 @@ class Injector:
 
     __injected = False
 
+    def __init__(self) -> None:
+        raise RuntimeError("Injector should not be instantiated.")
+
     @classmethod
     def initialize(
         cls, get: t.Callable[[t.Type[T]], T], set_: t.Callable[[t.Type[T], T], t.Any]

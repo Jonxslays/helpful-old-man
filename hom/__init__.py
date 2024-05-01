@@ -10,4 +10,3 @@ from .config import *
 from .injector import *
 from .models import *
 from .services import *
-from .views import *
