@@ -10,6 +10,7 @@ from hom import client as _client
 from hom.config import Config
 from hom.injector import Injector
 from hom.models import Ticket
+from .archives import ArchiveService
 from .embeds import EmbedService
 
 __all__ = ("TicketService",)
@@ -101,7 +102,14 @@ class TicketService:
         await ctx.respond(embeds.ticket_closed(ctx.author.id), components=view)
 
     async def archive(self, ctx: miru.ViewContext) -> None:
-        print("Archiving tickets is not yet implemented.")
+        archives = Injector.get(ArchiveService)
+
+        # Archive the ticket
+        await ctx.respond("Archiving the ticket...", flags=hikari.MessageFlag.EPHEMERAL)
+        await archives.archive_ticket(ctx)
+
+        # Say bye bye to the channel
+        await ctx.client.rest.delete_channel(ctx.channel_id)
 
     async def _get_ticket_for_user(
         self, guild_id: hikari.Snowflakeish, user_id: hikari.Snowflake

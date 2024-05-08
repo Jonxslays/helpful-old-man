@@ -4,7 +4,7 @@ from os import environ
 
 from dotenv import load_dotenv
 
-__all__ = ("Config", "Constants")
+__all__ = ("Config",)
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -125,25 +125,3 @@ class Config(metaclass=Configuration):
     @classmethod
     def _error(cls, key: str, error: str) -> None:
         logger.error(f"Required environment variable HOM_{key} {error}")
-
-
-@t.final
-class Constants:
-    __slots__ = ()
-
-    ARROW: t.Final[str] = "→"
-
-    PREFIX: t.Final[str] = "!"
-
-    DENIED: t.Final[str] = "❌"
-
-    COMPLETE: t.Final[str] = "✅"
-
-    FOOTER: t.Final[str] = (
-        "As a reminder, all moderators and admins in this "
-        "server volunteer to assist in their free time. "
-        "We appreciate your patience.\u200b\n\u200b"
-    )
-
-    def __init__(self) -> None:
-        raise RuntimeError("Constants should not be instantiated")

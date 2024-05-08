@@ -84,6 +84,7 @@ class Client(arc.GatewayClientBase[hikari.GatewayBot]):
             Injector.initialize(self.get_type_dependency, self.set_type_dependency)
             .set(hikari.GatewayBot, bot)
             .set(miru.Client, miru_client)
+            .set(services.ArchiveService, services.ArchiveService())
             .set(services.EmbedService, services.EmbedService())
             .set(services.ModLogService, services.ModLogService())
             .set(services.TemplateService, services.TemplateService())

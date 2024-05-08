@@ -18,8 +18,11 @@ class TemplateSection(BaseStrEnum):
 
     ApiKey = "api-key"
     ApproveNameChange = "approve-name-change"
+    Author = "author"
     AwaitingResponse = "awaiting-response"
+    Content = "content"
     DeleteNameChanges = "delete-name-changes"
+    LogMessage = "log-message"
     Other = "other"
     Patreon = "patreon"
     PatreonChannel = "patreon-channel"
@@ -32,6 +35,7 @@ class TemplateSection(BaseStrEnum):
     ScreenshotFull = "screenshot-full"
     ScreenshotMinimal = "screenshot-minimal"
     Support = "support"
+    Timestamp = "timestamp"
     VerifyGroup = "verify-group"
 
 

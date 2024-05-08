@@ -15,12 +15,20 @@ plugin: Plugin = arc.GatewayPluginBase("commands")
 support = plugin.include_slash_group("support", "Support related commands.")
 
 
+@plugin.include
+@arc.slash_command("test", "Test options")
+async def test_options(
+    ctx: Context, /, color: arc.Option[hikari.Color, arc.ColorParams("The color.")]
+) -> None:
+    await ctx.respond(hikari.Embed(description="Your color!", color=color))
+
+
 @support.include
 @arc.slash_subcommand("send", "Send the support embed to a channel.")
 async def support_send(
     ctx: Context,
     /,
-    channel: arc.Option[  # type: ignore[valid-type]
+    channel: arc.Option[
         hikari.GuildTextChannel,
         arc.ChannelParams("The channel to send the embed to."),
     ],

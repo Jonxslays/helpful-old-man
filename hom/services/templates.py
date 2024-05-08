@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from pathlib import Path
 
 from hom.config import Config
@@ -44,7 +45,15 @@ class TemplateService:
         Returns:
             The requested template.
         """
-        return self._templates[section.value.lower()]
+        template = self._templates[section.value.lower()]
+
+        if section == TemplateSection.LogMessage:
+            # We always want to repopulate this template because
+            # log messages are all unique, whereas the other templates
+            # we only populate once for efficiency.
+            return deepcopy(template)
+
+        return template
 
     def get_support_template(self) -> Template:
         """Gets the template for the support channel embed.
@@ -165,6 +174,18 @@ class TemplateService:
             The requested template.
         """
         return self._get_template_with_reminder(TemplateSection.ReviewNameChange)
+
+    def get_log_message_template(self, author: str, timestamp: str, content: str) -> Template:
+        """Gets the template for a single mod log message.
+
+        Returns:
+            The requested template.
+        """
+        template = self.get_template(TemplateSection.LogMessage)
+        template.populate(TemplateSection.Author, author)
+        template.populate(TemplateSection.Timestamp, timestamp)
+        template.populate(TemplateSection.Content, content)
+        return template
 
     def _get_template_with_reminder(
         self, section: TemplateSection, mark_populated: bool = True
