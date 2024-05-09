@@ -22,8 +22,13 @@ class ArchiveService:
     __slots__ = ()
 
     async def archive_ticket(self, ctx: miru.ViewContext) -> None:
-        data = io.BytesIO()
+        """Archives the ticket channel this context originated from.
+
+        Args:
+            ctx: The view context.
+        """
         attachments: list[hikari.Attachment] = []
+        data = io.BytesIO()
 
         ## Accumulate the contents/embed contents of each message
         async for message in ctx.client.rest.fetch_messages(ctx.channel_id).reversed():
@@ -37,9 +42,25 @@ class ArchiveService:
         await self._send_additional_attachments(ctx, attachments, data)
 
     def _get_embed_summary(self, embed: hikari.Embed) -> str:
+        """Gets a simple summary for the embed.
+
+        Args:
+            embed: The embed to summarize.
+
+        Returns:
+            The summary.
+        """
         return f"\nEmbed title: {embed.title}\nEmbed description:\n{embed.description}"
 
     async def _send_initial_attachment(self, ctx: miru.ViewContext, data: io.BytesIO) -> None:
+        """Sends the attachment with info about the message content and
+        embeds to the mod log channel.
+
+        Args:
+            ctx: The view context.
+            data: The buffer to send.
+        """
+
         # Clear the buffer
         data.flush()
         data.seek(0)
@@ -52,6 +73,17 @@ class ArchiveService:
     async def _send_additional_attachments(
         self, ctx: miru.ViewContext, attachments: list[hikari.Attachment], data: io.BytesIO
     ) -> None:
+        """Compresses and sends the additional attachments that were
+        attached to messages in the ticket channel to the mod log
+        channel.
+
+        WARNING: This method mutates the data buffer.
+
+        Args:
+            ctx: The view context.
+            attachments: The attachments to send.
+            data: The buffer to clear and fill with attachment data.
+        """
         if not attachments:
             return None
 
@@ -72,6 +104,14 @@ class ArchiveService:
         )
 
     def _get_message_bytes(self, message: hikari.Message) -> bytes:
+        """Gets the contents of the message as bytes.
+
+        Args:
+            message: The message.
+
+        Returns:
+            The contents as bytes.
+        """
         templates = Injector.get(TemplateService)
 
         author = f"{message.author.username} ({message.author.id})"
@@ -94,6 +134,17 @@ class ArchiveService:
     def _get_attachment(
         self, author: hikari.User, data: io.BytesIO, ext: str = "txt", prefix: str = ""
     ) -> hikari.Bytes:
+        """Gets a hikari bytes object for uploading as an attachment.
+
+        Args:
+            author: The author who uploaded the attachment.
+            data: The buffer containing the attachments bytes.
+            ext: The file extension. Defaults to "txt".
+            prefix: The file prefix. Defaults to "".
+
+        Returns:
+            The bytes for the attachment.
+        """
         data.seek(0)
 
         username = author.username.replace(" ", "-")
@@ -104,6 +155,6 @@ class ArchiveService:
             .split(".")[0]
         )
 
-        return hikari.Bytes(
-            data.read(), f"{prefix + '-' if prefix else prefix}{username}-{timestamp}.{ext}"
-        )
+        prefix = f"{prefix + '-' if prefix else prefix}"
+        filename = f"{prefix}{username}-{timestamp}.{ext}"
+        return hikari.Bytes(data, filename)
