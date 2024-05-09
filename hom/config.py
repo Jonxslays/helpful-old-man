@@ -4,7 +4,7 @@ from os import environ
 
 from dotenv import load_dotenv
 
-__all__ = ("Config",)
+__all__ = ("Config", "Images")
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -125,3 +125,27 @@ class Config(metaclass=Configuration):
     @classmethod
     def _error(cls, key: str, error: str) -> None:
         logger.error(f"Required environment variable HOM_{key} {error}")
+
+
+@t.final
+class Images:
+    """Discord CDN image links.
+
+    How long will they work?
+
+    Find out next time on:
+    Insanely popular chat app pushes breaking changes to production.
+    """
+
+    GROUP: t.Final[str] = (
+        "https://cdn.discordapp.com/attachments/696219254076342312/1200157429283962880/group.jpg"
+    )
+    """Example group leader verification."""
+
+    PLAYER: t.Final[str] = (
+        "https://cdn.discordapp.com/attachments/696219254076342312/1200157428981977229/player.jpg"
+    )
+    """Example player verification."""
+
+    def __init__(self) -> None:
+        raise RuntimeError("Images should not be instantiated")

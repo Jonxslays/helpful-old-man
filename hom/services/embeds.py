@@ -4,6 +4,7 @@ import arc
 import hikari
 import miru
 
+from hom.config import Images
 from hom.injector import Injector
 from hom.models import Template
 from hom.models import TemplateSection
@@ -162,7 +163,7 @@ class EmbedService:
         templates = Injector.get(TemplateService)
         template = templates.get_verify_group_template()
         title = "Groups → Verify my group"
-        return self.ticket_opened(title, template)
+        return self.ticket_opened(title, template).set_image(Images.GROUP)
 
     def reset_group_code(self) -> hikari.Embed:
         """Gets the embed for use with the "Reset group verification" ticket.
@@ -173,7 +174,7 @@ class EmbedService:
         templates = Injector.get(TemplateService)
         template = templates.get_reset_group_verification_template()
         title = "Groups → Reset my group verification code"
-        return self.ticket_opened(title, template)
+        return self.ticket_opened(title, template).set_image(Images.GROUP)
 
     def remove_from_group(self) -> hikari.Embed:
         """Gets the embed for use with the "Remove from group" ticket.
@@ -184,7 +185,7 @@ class EmbedService:
         templates = Injector.get(TemplateService)
         template = templates.get_remove_from_group_template()
         title = "Groups → Remove me from a group"
-        return self.ticket_opened(title, template)
+        return self.ticket_opened(title, template).set_image(Images.PLAYER)
 
     def approve_name_change(self) -> hikari.Embed:
         """Gets the embed for use with the "Approve name change" ticket.
@@ -206,7 +207,7 @@ class EmbedService:
         templates = Injector.get(TemplateService)
         template = templates.get_delete_name_changes_template()
         title = "Names → Delete my name change history"
-        return self.ticket_opened(title, template)
+        return self.ticket_opened(title, template).set_image(Images.PLAYER)
 
     def review_name_change(self) -> hikari.Embed:
         """Gets the embed for use with the "Review name change" ticket.
