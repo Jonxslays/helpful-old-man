@@ -60,6 +60,7 @@ class Archive(ViewBase):
         tickets = Injector.get(TicketService)
         await tickets.archive(ctx)
 
+
 class Groups(ViewBase):
     @miru.button(
         label="Verify my group",
@@ -148,7 +149,7 @@ class Support(ViewBase):
         custom_id="support-groups",
     )
     async def groups(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        await self.ephemeral_view(ctx, Names())
+        await self.ephemeral_view(ctx, Groups())
 
     @miru.button(
         label="Name Changes",
@@ -156,7 +157,7 @@ class Support(ViewBase):
         custom_id="support-names",
     )
     async def names(self, ctx: miru.ViewContext, _: miru.Button) -> None:
-        await self.ephemeral_view(ctx, Groups())
+        await self.ephemeral_view(ctx, Names())
 
     @miru.button(
         label="Patreon",

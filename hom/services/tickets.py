@@ -30,13 +30,13 @@ class TicketService:
             ctx: The miru view context.
             embed: The embed to send to the created ticket channel.
             view: The view to send to the created ticket channel.
-            label: The button label (will be added to the channel topic).
+            label: The button label indicating the ticket type.
 
         Returns:
             The new or existing ticket.
         """
         client = Injector.get(_client.Client)
-        assert ctx.guild_id
+        assert ctx.guild_id  # DM commands are disabled
 
         if ticket := await self._get_ticket_for_user(ctx.guild_id, ctx.author.id):
             # Already has an open ticket
@@ -45,11 +45,10 @@ class TicketService:
             return ticket
 
         # Create the ticket channel
-        topic = f"{label}-{ctx.author.id}"
         channel = await client.rest.create_guild_text_channel(
             ctx.guild_id,
             f"{ctx.author.username[:20]}",
-            topic=topic,
+            topic=f"{ctx.author.id}",
             category=Config.TICKET_CATEGORY,
             reason=f"{ctx.author.username} ({ctx.author.id}) has opened a ticket: {label}.",
             permission_overwrites=self._create_ticket_overwrites(
@@ -73,7 +72,7 @@ class TicketService:
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-        return Ticket(ctx.author.id, channel.id, topic, True)
+        return Ticket(ctx.author.id, channel.id, f"{ctx.author.id}", True)
 
     async def close(self, ctx: miru.ViewContext, view: miru.View) -> None:
         """Closes the ticket channel by removing the owners permissions
@@ -84,7 +83,7 @@ class TicketService:
             view: The view to send when the ticket is successfully closed.
         """
         embeds = Injector.get(EmbedService)
-        assert ctx.guild_id
+        assert ctx.guild_id  # DM commands are disabled
 
         if not (ticket := await self._get_ticket_for_channel(ctx.guild_id, ctx.channel_id)):
             # The channel topic doesnt have the correct format
@@ -123,7 +122,7 @@ class TicketService:
         Returns:
             The ticket or none if one was not found.
         """
-        async for channel in self._get_ticket_channels(guild_id):
+        for channel in self._get_ticket_channels(guild_id):
             # If they have user specific permissions on the channel
             if overwrites := channel.permission_overwrites.get(user_id):
                 # And those permissions allow them to view it
@@ -151,57 +150,52 @@ class TicketService:
             # was mentioned in the first message in the channel but
             # I felt like we were more likely to delete that message on
             # accident than to edit the channel topic on accident.
+            client = Injector.get(_client.Client)
+            channel = client.cache.get_guild_channel(channel_id)
 
-            async for channel in self._get_ticket_channels(guild_id):
-                if channel.id == channel_id:
-                    if not channel.topic:
-                        raise Exception("Ticket channel topic is missing")
+            if not channel or not any(self._filter_valid_channels({channel})):
+                return None
 
-                    # Expecting: <ticket type>-<user id>
-                    # Example:   Other-123456789
-                    owner_id = channel.topic.split("-")[-1].rstrip("_CLOSED")
-                    return Ticket(int(owner_id), channel.id, channel.topic, False)
+            # If it was not a text channel, it would be filtered above
+            assert isinstance(channel, hikari.GuildTextChannel)
+
+            if not channel.topic:
+                raise Exception("Ticket channel topic is missing")
+
+            owner_id = channel.topic.rstrip("_CLOSED")
+            return Ticket(int(owner_id), channel.id, channel.topic, False)
         except Exception as e:
             logger.error(f"Failed to find ticket owner for channel {channel_id}: {e}")
 
         return None
 
-    async def _get_ticket_channels(
+    def _get_ticket_channels(
         self, guild_id: hikari.Snowflakeish
-    ) -> t.AsyncIterable[hikari.GuildTextChannel]:
-        """Gets the currently active ticket channels.
+    ) -> t.Iterable[hikari.GuildTextChannel]:
+        """Gets the channels in the ticket category.
 
         Args:
             guild_id: The guild to get channels for.
 
-        Returns:
-            An async iterable over the active ticket channels.
+        Yields:
+            The
         """
         client = Injector.get(_client.Client)
         channels = client.cache.get_guild_channels_view_for_guild(guild_id)
-        filtered = self._filter_valid_channels(channels.values())
-
-        # TODO: This caching mechanism is broken
-        # but we dont want to always fetch
-        # the ratelimit is 10 / minute.
-        # someone could spam a support button and ratelimit us
-
-        if not any(filtered):
-            logger.info("Fetching ticket channels from the API")
-            channels = await client.rest.fetch_guild_channels(guild_id)
-            filtered = self._filter_valid_channels(channels)
-
-        for channel in filtered:
-            # We are manually caching here to prevent having to fetch
-            # a bunch of times in a row
-            if not client.app._cache.get_guild_channel(channel):  # type: ignore
-                client.app._cache.set_guild_channel(channel)  # type: ignore
-
-            yield channel
+        yield from self._filter_valid_channels(channels.values())
 
     def _filter_valid_channels(
         self, channels: t.Iterable[hikari.GuildChannel]
     ) -> t.Iterable[hikari.GuildTextChannel]:
+        """Filters the given channels and yields the text channels that
+        are in the ticket category.
+
+        Args:
+            channels: The channels to filter.
+
+        Yields:
+            The channels in the ticket category.
+        """
         for channel in channels:
             if channel.parent_id != Config.TICKET_CATEGORY:
                 # Not in the correct category
@@ -245,7 +239,7 @@ class TicketService:
         Returns:
             A tuple containing the necessary overwrites.
         """
-        assert application
+        assert application  # Only none before the bot has fully started
 
         mod_perms = self._create_role_overwrite(Config.MOD_ROLE, allow=Permissions.VIEW_CHANNEL)
         hom_perms = self._create_member_overwrite(application.id, allow=Permissions.VIEW_CHANNEL)

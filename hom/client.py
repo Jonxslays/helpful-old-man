@@ -27,7 +27,9 @@ class Client(arc.GatewayClientBase[hikari.GatewayBot]):
     def __init__(self) -> None:
         bot = hikari.GatewayBot(
             Config.DISCORD_TOKEN,
-            intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILDS,
+            intents=hikari.Intents.GUILDS
+            | hikari.Intents.GUILD_MESSAGES
+            | hikari.Intents.MESSAGE_CONTENT,
         )
 
         super().__init__(bot, is_dm_enabled=False)

@@ -1,6 +1,6 @@
 # import typing as t
+import datetime
 import io
-from datetime import datetime
 
 # import arc
 import hikari
@@ -56,7 +56,11 @@ class ArchiveService:
         data.seek(0)
 
         username = author.username.replace(" ", "-")
-        timestamp = datetime.now().isoformat()
-        filename = f"{username}-{timestamp}.txt"
+        timestamp = (
+            datetime.datetime.now(tz=datetime.timezone.utc)
+            .isoformat()
+            .replace(":", "-")
+            .split(".")[0]
+        )
 
-        return hikari.Bytes(data.read(), filename)
+        return hikari.Bytes(data.read(), f"{username}-{timestamp}.txt")
