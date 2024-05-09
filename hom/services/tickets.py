@@ -83,9 +83,8 @@ class TicketService:
             view: The view to send when the ticket is successfully closed.
         """
         embeds = Injector.get(EmbedService)
-        assert ctx.guild_id  # DM commands are disabled
 
-        if not (ticket := await self._get_ticket_for_channel(ctx.guild_id, ctx.channel_id)):
+        if not (ticket := await self._get_ticket_for_channel(ctx.channel_id)):
             # The channel topic doesnt have the correct format
             # Expecting: <ticket type>-<user id>
             # Example:   Other-123456789
@@ -132,9 +131,7 @@ class TicketService:
 
         return None
 
-    async def _get_ticket_for_channel(
-        self, guild_id: hikari.Snowflakeish, channel_id: hikari.Snowflakeish
-    ) -> Ticket | None:
+    async def _get_ticket_for_channel(self, channel_id: hikari.Snowflakeish) -> Ticket | None:
         """Gets the ticket for the channel, if one exists.
 
         Args:
